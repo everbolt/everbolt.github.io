@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Project 1 - Image Alignment</title>
+  </head>
+  <body>
+    <h1>CS 180: Project 1 - Image Alignment</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+    <h2>About</h2>
+    <p>
+      This project colorizes images by implementing efficient image alignment
+      using edge detection and image pyramids to create well-defined features to
+      align the images on. As an additional feature, the project also implements
+      auto-cropping to remove excess artifacts remaining after the alignment is
+      completed.
+    </p>
+
+    <h2>Edge detection</h2>
+    <p>
+      How do we find common features to align three images on? With the human
+      eye, we can usually pick out a primary feature within any image and match
+      it across all three colored images. Fortunately, we can achieve something
+      similar with an algorithm. We first pre-process the image by measuring the
+      difference between each pixel and its neighbors. This results in a new
+      image where bright pixels (high values) indicate that the pixel is
+      distinct compared to some of its neighbors. This is great because it
+      allows us to capture features across the entire image that may be shared
+      across the other colored images. To prevent differing intensities between
+      the red, green, and blue colored images, I normalize each edge detection
+      image by the max pixel value of that image. Below is a visualization of
+      edge detection on the lady.tif image.
+    </p>
+
+    <img
+      src="./images/edge_detection.png"
+      alt="Edge Detection"
+      style="width: 30vw"
+    />
+
+    <h2>Efficient Alignment</h2>
+    <p>
+      Now that we have isolated shared features across our red, green, and blue
+      images, we can implement the image alignment. The most trivial approach is
+      to test all possible alignments of the green and blue images with the red
+      image within +-15 pixels on both the x and y axis. This produces excellent
+      results for the first 3 .jpg images which is great! Unfortunately, this
+      does not work well when we try using a .tif file that has ~100 times more
+      pixels (3000x3000 vs 300x300). It seems that the alignments needed for the
+      .tif image are much larger than just +-15 pixels. To solve this, we can
+      use image pyramids to create downsampled versions of the images and align
+      them first. This allows us to find a rough alignment that we can then use
+      to align the full-sized images. This approach produces a substantial
+      speedup to our original alignment method and allows us to search across
+      much larger alignment dimensions for .tif images.
+    </p>
+
+    <h2>Auto-Cropping!</h2>
+    <p>
+      I noticed that the resulting aligned images were great! Unfortunately,
+      there were some pretty noticable borders that were produced by shifting
+      each of the red, green, and blue pictures around. To fix this, I wanted to
+      build an intelligent cropping algorithm. I first converted each pixel to a
+      form of grayscale by taking the sum of each pixel's RGB channels, each
+      scaled by 1/3 (I originally tried the human-vision-oriented scaling, but
+      that produced worse results since it emphasized certain colors). I decided
+      to use a similar edge detection algorithm to measure the differences of
+      pixels to their neighbors, but specifically to only either their
+      horizontal or vertical neighbors, and to pixels farther away. For example,
+      for ~300x300 images, I measure the difference between a given pixel and
+      pixels horizontal from it, up to 10 pixels away. This was because I
+      noticed that the artifacts on the borders were always either vertical or
+      horizontal rectangles and roughly uniform color. By measuring the
+      similarity of pixels to their distant neighbors, I could produce a metric
+      of the average horizontal/vertical pixel similarity of an image. Then, I
+      could attempt different cropping dimensions and choose the one that
+      minimized the average pixel similarity. This produced good results and
+      managed to remove the vast majority of the artifacts on the borders of the
+      images.<br /><br />The original aligned images can be seen on the left
+      side below. The auto-cropped images can be seen on the right side. It
+      seems to work pretty well and I think it's pretty cool!
+    </p>
+
+    <img
+      src="./images/auto_crop.png"
+      alt="Auto-Cropping Detection"
+      style="width: 30vw"
+    />
+
+    <h2>Small hiccups and Interesting Things</h2>
+    <p>
+      I've noticed that there are some cases where individual parts of images
+      look unaligned by a few pixels. This was initially concerning, but after
+      thinking about it, I realized that this was likely due to the subject
+      moving slightly while the pictures were taken. This is primarily because
+      the remainder of the image looks well-aligned.
+      <br /><br />There are a few cases where the cropping algorithm slightly
+      overcrops the image which is unfortunate. I believe this is due to the
+      existance of a semi-uniform-colored object that exists near the border of
+      the image, such as in the Monastery picture.
+    </p>
+
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Cathedral
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/cathedral.jpg"
+        alt="Cathedral Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/cathedral.jpg"
+        alt="Cathedral Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -7, -1</li>
+      <li>Blue Alignment: -12, -3</li>
+      <li>Autocrop Dimensions: (Bottom 37) (Top 8) (Right 31) (Left 21)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Monastery
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/monastery.jpg"
+        alt="Monastery Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/monastery.jpg"
+        alt="Monastery Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -6, -1</li>
+      <li>Blue Alignment: -3, -2</li>
+      <li>Autocrop Dimensions: (Bottom 50) (Top 19) (Right 25) (Left 27)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Tobolsk
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/tobolsk.jpg"
+        alt="Tobolsk Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/tobolsk.jpg"
+        alt="Tobolsk Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -4, -1</li>
+      <li>Blue Alignment: -6, -3</li>
+      <li>Autocrop Dimensions: (Bottom 50) (Top 5) (Right 27) (Left 33)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">Emir</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/emir.jpg"
+        alt="Emir Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/emir.jpg"
+        alt="Emir Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -58, -17</li>
+      <li>Blue Alignment: -107, -40</li>
+      <li>Autocrop Dimensions: (Bottom 244) (Top 88) (Right 231) (Left 238)</li>
+    </ul>
+
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Onion Church
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/onion_church.jpg"
+        alt="Onion Church Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/onion_church.jpg"
+        alt="Onion Church Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -57, -10</li>
+      <li>Blue Alignment: -108, -36</li>
+      <li>
+        Autocrop Dimensions: (Bottom 476) (Top 164) (Right 263) (Left 260)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">Icon</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/icon.jpg"
+        alt="Icon Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/icon.jpg"
+        alt="Icon Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -48, -5</li>
+      <li>Blue Alignment: -90, -23</li>
+      <li>Autocrop Dimensions: (Bottom 174) (Top 38) (Right 189) (Left 497)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      In Italy
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/in_italy.jpg"
+        alt="In Italy Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/in_italy.jpg"
+        alt="In Italy Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -39, -15</li>
+      <li>Blue Alignment: -77, -36</li>
+      <li>
+        Autocrop Dimensions: (Bottom 147) (Top 205) (Right 221) (Left 183)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">Train</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/train.jpg"
+        alt="Train Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/train.jpg"
+        alt="Train Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -43, -26</li>
+      <li>Blue Alignment: -86, -30</li>
+      <li>
+        Autocrop Dimensions: (Bottom 225) (Top 164) (Right 256) (Left 221)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">Melons</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/melons.jpg"
+        alt="Melons Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/melons.jpg"
+        alt="Melons Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -96, -3</li>
+      <li>Blue Alignment: -177, -13</li>
+      <li>
+        Autocrop Dimensions: (Bottom 206) (Top 109) (Right 307) (Left 546)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Three Generations
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/three_generations.jpg"
+        alt="Three Generations Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/three_generations.jpg"
+        alt="Three Generations Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -58, 3</li>
+      <li>Blue Alignment: -111, -9</li>
+      <li>
+        Autocrop Dimensions: (Bottom 185) (Top 176) (Right 384) (Left 205)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">Church</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/church.jpg"
+        alt="Church Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/church.jpg"
+        alt="Church Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -33, 8</li>
+      <li>Blue Alignment: -58, 4</li>
+      <li>Autocrop Dimensions: (Bottom 252) (Top 86) (Right 277) (Left 156)</li>
+    </ul>
+
+    <h3 style="display: block; text-align: center; margin-top: 20px">Lady</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/lady.jpg"
+        alt="Lady Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/lady.jpg"
+        alt="Lady Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -63, -4</li>
+      <li>Blue Alignment: -119, -13</li>
+      <li>
+        Autocrop Dimensions: (Bottom 212) (Top 165) (Right 229) (Left 231)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Sculpture
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/sculpture.jpg"
+        alt="Sculpture Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/sculpture.jpg"
+        alt="Sculpture Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -107, 16</li>
+      <li>Blue Alignment: -140, 27</li>
+      <li>Autocrop Dimensions: (Bottom 487) (Top 78) (Right 163) (Left 569)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Harvesters
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/harvesters.jpg"
+        alt="Harvesters Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/harvesters.jpg"
+        alt="Harvesters Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -64, 3</li>
+      <li>Blue Alignment: -124, -13</li>
+      <li>
+        Autocrop Dimensions: (Bottom 206) (Top 101) (Right 268) (Left 207)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Self Portrait
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/self_portrait.jpg"
+        alt="Self Portrait Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/self_portrait.jpg"
+        alt="Self Portrait Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -98, -8</li>
+      <li>Blue Alignment: -175, -36</li>
+      <li>Autocrop Dimensions: (Bottom 435) (Top 43) (Right 250) (Left 349)</li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Camel Packs
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/camel_packs.jpg"
+        alt="Camel Packs Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/camel_packs.jpg"
+        alt="Camel Packs Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -61, -21</li>
+      <li>Blue Alignment: -81, -38</li>
+      <li>
+        Autocrop Dimensions: (Bottom 459) (Top 133) (Right 291) (Left 177)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Uniform
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/uniform.jpg"
+        alt="Uniform Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/uniform.jpg"
+        alt="Uniform Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -54, 18</li>
+      <li>Blue Alignment: -95, 10</li>
+      <li>
+        Autocrop Dimensions: (Bottom 183) (Top 197) (Right 275) (Left 248)
+      </li>
+    </ul>
+    <h3 style="display: block; text-align: center; margin-top: 20px">
+      Peonies
+    </h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <img
+        src="./images/uncropped/peonies.jpg"
+        alt="Peonies Image"
+        style="width: 30vw"
+      />
+      <img
+        src="./images/cropped/peonies.jpg"
+        alt="Peonies Image"
+        style="width: 30vw"
+      />
+    </div>
+    <ul>
+      <li>Green Alignment: -53, 8</li>
+      <li>Blue Alignment: -105, 5</li>
+      <li>
+        Autocrop Dimensions: (Bottom 194) (Top 479) (Right 220) (Left 240)
+      </li>
+    </ul>
+  </body>
+</html>
