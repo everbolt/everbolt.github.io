@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Project 1 - Fun with Filters and Frequencies</title>
+  </head>
+  <body>
+    <h1>CS 180: Project 2 - Fun with Filters and Frequencies</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+    <h2>About</h2>
+    <p>
+      This project experiments with low-pass and high-pass filters using a
+      Gaussian kernel. In doing so, we implement image sharpening, hybrid
+      images, and masked images.
+    </p>
+
+    <h2>Finite Difference Operator</h2>
+    <p>
+      We define two finite difference operators D_x = [1, -1] and D_y = [1,
+      -1].T that we can use to compute the gradient of an image. By convolving
+      the cameraman image with the D_x operator, we can compute the horizontal
+      gradient of the image. That is, the difference in pixel values between
+      each pixel and the pixel to its right. Similarly, by convolving the
+      cameraman image with the D_y operator, we can compute the vertical
+      gradient of the image; the difference in pixel values between each pixel
+      and the pixel below it.
+      <br /><br />
+      By combining these two gradients, we can compute the magnitude of the
+      gradient of the image. This is useful for edge detection as the magnitude
+      of the gradient is large at edges and small at smooth regions.
+    </p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_x.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>X Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_y.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Y Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_combined.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>X + Y Convolution</p>
+      </div>
+    </div>
+
+    <h3>Binarized</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_bin_x.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>X Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_bin_y.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Y Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_bin_combined.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>X + Y Convolution</p>
+      </div>
+    </div>
+
+    <h2>That's too noisy!</h2>
+    <p>
+      Unfortunately, we're picking up too much noise from the image when
+      computing these edges. We can see this in the foreground of the cameraman
+      image where there are speckles of white pixels. To fix this, we can apply
+      a Gaussian filter to the image before computing the gradient. This will
+      remove higher-frequency noise from the image and produce a smoother
+      gradient.
+      <br /><br />
+      By doing so, we get a much cleaner gradient image that only displays the
+      important edges!
+    </p>
+
+    <h3>Low-pass filtered edge detection</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_denoised_bin_x.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>X Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_denoised_bin_y.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Y Convolution</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/gradient_denoised_bin_combined.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>X + Y Convolution</p>
+      </div>
+    </div>
+
+    <p>
+      What a lovely result! We no longer have the white pixel speckles in the
+      foreground and we've retained the important edges in the scene. The edges
+      have become wider and more pronounced, which makes reasonable sense
+      because the Gaussian filter has smoothed the image which increases the
+      area of the edges.
+      <br /><br />
+      We are also able to combine the Gaussian filter with the X and Y finite
+      difference operators to create a DoG convolution.
+    </p>
+
+    <h2>Image Sharpening</h2>
+    <p>
+      Now that we know how to isolate high frequencies in an image, we can use
+      that to add more high frequencies in an image to make it sharper!
+    </p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/taj.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>Taj Unsharpened</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/taj_sharpened.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Taj Sharpened</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/taj_oversharpened.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Taj Oversharpened</p>
+      </div>
+    </div>
+
+    <p>
+      This camel is almost too blurry to resharpen well. I think this sharpening
+      process works well on more clearly contrasting edges, unlike the camel's
+      color and the background.
+    </p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/camel.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>Camel Unsharpened</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/camel_sharpened.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Camel Sharpened</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/camel_oversharpened.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Camel Oversharpened</p>
+      </div>
+    </div>
+
+    <p>
+      When we first blur the image and then attempt to resharpen it, we get
+      interesting results! The image becomes sharper, but we also introduce
+      unavoidable noise into the image from the Gaussian filter. The Gaussian
+      filter is lossy and thus there is no sharpening filter that will perfectly
+      restore the original image. We can notice this when examining the specific
+      blades of grass that are lost after blurring and resharpening the image.
+    </p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/grass.png"
+          alt="Binarized X Convolution"
+          style="width: 30vw"
+        />
+        <p>Grass</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/grass_blurred.png"
+          alt="Binarized Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Grass Blurred</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/grass_blurred_sharpened.png"
+          alt="Binarized X + Y Convolution"
+          style="width: 30vw"
+        />
+        <p>Grass Re-sharpened</p>
+      </div>
+    </div>
+
+    <h2>Hybrid Images</h2>
+    <p>
+      Let's create some cool images through combination! One cool idea is to
+      combine the low frequencies of one image and the high frequencies of
+      another. By doing so, we create an image that can look like both of the
+      original images, depending on how it is viewed.
+    </p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img
+          src="./images/derek.jpg"
+          alt="Binarized X Convolution"
+          style="width: auto; height: 40vh"
+        />
+        <p>Derek</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/nutmeg.jpg"
+          alt="Binarized Y Convolution"
+          style="width: 30vw; height: auto"
+        />
+        <p>Nutmeg</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/hybrid_basic.png"
+          alt="Derek Cat"
+          style="width: auto; height: 40vh"
+        />
+        <p>Derek Cat</p>
+      </div>
+    </div>
+
+    <h3>FFT Images</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img src="./images/fft/derek.png" style="width: 25vw" />
+        <p>Derek</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/derek_filtered.png" style="width: 25vw" />
+        <p>Derek Filtered</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/cat.png" style="width: 25vw" />
+        <p>Cat</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/cat_filtered.png" style="width: 25vw" />
+        <p>Cat Filtered</p>
+      </div>
+    </div>
+    <div style="text-align: center">
+      <img src="./images/fft/derek_cat.png" style="width: 40vw" />
+      <p>Derek Cat</p>
+    </div>
+
+    <p>Let's do this with an angry and happy person!</p>
+
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img src="./images/happy.jpg" style="width: auto; height: 40vh" />
+        <p>Happy</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/angry.jpg" style="width: 30vw; height: auto" />
+        <p>Angry</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/happy_angry.jpg" style="width: auto; height: 40vh" />
+        <p>Happy Angry</p>
+      </div>
+    </div>
+
+    <h3>FFT Images</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img src="./images/fft/happy.png" style="width: 25vw" />
+        <p>Happy</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/happy.png" style="width: 25vw" />
+        <p>Happy Filtered</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/angry.png" style="width: 25vw" />
+        <p>Angry</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/fft/angry_filtered.png" style="width: 25vw" />
+        <p>Angry Filtered</p>
+      </div>
+    </div>
+    <div style="text-align: center; margin-bottom: 50px">
+      <img src="./images/fft/happy_angry.png" style="width: 40vw" />
+      <p>Happy Angry</p>
+    </div>
+
+    <p>
+      Here's an example of one that didn't work very well. It seems like
+      creating hybrid images this way requires the two images to have similar
+      general shapes. In this case, Einstein's picture is oriented differently
+      than the picture of the angry man. That makes it much harder to create a
+      hybrid image that looks like both of them.
+    </p>
+    <div
+      style="
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        max-width: 100vw;
+      "
+    >
+      <div style="text-align: center">
+        <img src="./images/einstein.jpg" style="width: auto; height: 40vh" />
+        <p>Einstein</p>
+      </div>
+      <div style="text-align: center">
+        <img src="./images/angry.jpg" style="width: 30vw; height: auto" />
+        <p>Angry</p>
+      </div>
+      <div style="text-align: center">
+        <img
+          src="./images/hybrid_failure.jpg"
+          style="width: auto; height: 40vh"
+        />
+        <p>An Angry Einstein</p>
+      </div>
+    </div>
+
+    <h2>Multi-resolution Blending</h2>
+    <p>
+      Ok, creating hybrid images is cool, but how else can we do this? What if
+      we tried to blend images with a mask, so we include all frequencies from
+      both images, but just in different locations in the image! Multiresolution
+      blending combines two images by merging details at different spatial
+      frequencies using Gaussian and Laplacian stacks. First, Gaussian stacks
+      (progressively blurred versions) and Laplacian stacks (high-frequency
+      details) are created for each image. A Gaussian stack is also generated
+      for a mask, which determines which parts of each image appear in the final
+      blend. At each level, the Laplacian stacks of both images are blended
+      using the mask, allowing smooth transitions between regions. Finally, the
+      blended image is reconstructed by successively upsampling and adding the
+      levels in the blended Laplacian stack. This technique allows seamless
+      blending of textures and features from both images across different
+      scales.
+    </p>
+
+    <div style="text-align: center">
+      <h3>Gaussian Stack</h3>
+      <img
+        src="./images/gaussian_stack.png"
+        style="width: 70vw; height: auto"
+      />
+    </div>
+    <div style="text-align: center">
+      <h3>Laplacian Stack</h3>
+      <img
+        src="./images/laplacian_stack.png"
+        style="width: 70vw; height: auto"
+      />
+    </div>
+
+    <h3>Oraple!</h3>
+    <div style="text-align: center">
+      <p>Stack</p>
+      <img src="./images/oraple_stack.png" style="width: 70vw; height: auto" />
+    </div>
+    <div style="text-align: center">
+      <p>Final Result</p>
+      <img src="./images/oraple.jpg" style="width: 30vw; height: auto" />
+    </div>
+    <br /><br />
+    <h3>Pear Lightbulb!</h3>
+    <div style="text-align: center">
+      <p>Stack</p>
+      <img
+        src="./images/pear_lightbulb_stack.png"
+        style="width: 70vw; height: auto"
+      />
+    </div>
+    <div style="text-align: center">
+      <p>Final Result</p>
+      <img
+        src="./images/pear_lightbulb.jpg"
+        style="width: 30vw; height: auto"
+      />
+    </div>
+    <p>
+      Let's try an irregular filter to create a portal-like effect on two
+      different nature pictures!
+    </p>
+
+    <h3>Desert Tundra</h3>
+    <div style="text-align: center">
+      <p>Stack</p>
+      <img
+        src="./images/desert_tundra_stack.png"
+        style="width: 70vw; height: auto"
+      />
+    </div>
+    <div style="text-align: center">
+      <p>Final Result</p>
+      <img src="./images/desert_tundra.jpg" style="width: 30vw; height: auto" />
+    </div>
+  </body>
+</html>
