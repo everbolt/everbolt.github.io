@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Project 3 - Face Morphing</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+      h1,
+      h2,
+      h3 {
+        text-align: center;
+      }
+      .image-row {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      .image-row div {
+        text-align: center;
+        margin: 10px;
+      }
+      .image-row img {
+        max-width: 100%;
+        height: auto;
+      }
+      p {
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CS 180: Project 3 - Face Morphing</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+
+    <h2>Introduction</h2>
+    <p>
+      In this project, I implemented face morphing techniques to produce a morph
+      animation of my face into another person's face. Additionally, I computed
+      the mean face of a population and created a caricature of my face by
+      extrapolating from the population mean.
+    </p>
+
+    <h2>Defining Correspondences</h2>
+    <p>
+      I began by selecting corresponding facial keypoints on both images. I used
+      the provided custom tool to select points such as the corners of the eyes,
+      mouth, nose, and the outline of the face. Below are the original images
+      with the annotated keypoints and the triangulation mesh used for morphing.
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/toby_jonny_points.png" />
+        <p>Keypoints on Toby and Jonny pictures</p>
+      </div>
+      <div>
+        <img src="./images/triangulation.png" alt="Triangulation Mesh" />
+        <p>Triangulation Mesh</p>
+      </div>
+    </div>
+
+    <h2>Computing the Mid-way Face</h2>
+    <p>
+      Next, I computed the average shape by averaging the corresponding
+      keypoints from both images. I then warped both faces into this average
+      shape using affine transformations on each triangle in the mesh. Finally,
+      I averaged the colors of the two warped images to produce the mid-way
+      face.
+    </p>
+
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      "
+    >
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/toby.jpg"
+          alt="Original Image A"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Toby Image</p>
+      </div>
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/jonny.jpg"
+          alt="Mid-way Face"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Jonny Image</p>
+      </div>
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/toby_jonny_midway.jpg"
+          alt="Original Image B"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Mid-way Image</p>
+      </div>
+    </div>
+
+    <h2>The Morph Sequence</h2>
+    <p>
+      I generated a morph sequence by varying the warp and dissolve fractions
+      from 0 to 1 in equal steps. This created a smooth transition from my face
+      to the target face. Below is an animated GIF showcasing the morphing
+      process.
+    </p>
+
+    <div style="text-align: center">
+      <img
+        id="toby-to-jonny"
+        src="./images/morph_sequence.gif"
+        alt="Morph Sequence"
+      />
+      <p>I've always wanted to be like my friend Jonny!</p>
+      <button onclick="restartGif('toby-to-jonny')">Replay</button>
+    </div>
+
+    <br /><br />
+    <p>
+      I noticed that the transition was pretty abrupt since our face shapes are
+      different! Here's another example with the picture of George that we were
+      given
+    </p>
+    <div style="text-align: center">
+      <img
+        id="toby-to-george"
+        src="./images/toby_george.gif"
+        alt="Toby to George"
+      />
+      <p>Toby to George!</p>
+      <button onclick="restartGif('toby-to-george')">Replay</button>
+    </div>
+
+    <script>
+      function restartGif(id) {
+        const img = document.getElementById(id);
+        const src = img.src;
+        img.src = "";
+        img.src = src;
+      }
+    </script>
+
+    <h2>The "Mean Face" of a Population</h2>
+    <p>
+      I used the FEI Face Database dataset, which includes annotated facial
+      keypoints for each image. I computed the average face shape of the
+      population and warped each face into this average shape. Here are some
+      examples:
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/1a_warped.png" alt="Warped Face 1" />
+        <p>Face 1a Warped to Average Shape</p>
+      </div>
+      <div>
+        <img src="./images/2a_warped.png" alt="Warped Face 2" />
+        <p>Face 2a Warped to Average Shape</p>
+      </div>
+      <div>
+        <img src="./images/3a_warped.png" alt="Warped Face 3" />
+        <p>Face 3a Warped to Average Shape</p>
+      </div>
+    </div>
+
+    <p>
+      After warping all faces to the average shape, I computed the mean face of
+      the population by averaging the pixel values. Below is the mean face:
+    </p>
+
+    <div style="text-align: center">
+      <img src="./images/average_face.png" alt="Mean Face of Population" />
+      <p>Mean Face of the Population</p>
+    </div>
+
+    <p>
+      I also warped my face into the average geometry and warped the average
+      face into my geometry:
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img
+          src="./images/toby_population_average.jpg"
+          alt="My Face to Mean Shape"
+        />
+        <p>My Face Warped to Mean Shape</p>
+      </div>
+      <div>
+        <img
+          src="./images/average_face_toby_population.jpg"
+          alt="Mean Face to My Shape"
+        />
+        <p>Mean Face Warped to My Shape</p>
+      </div>
+    </div>
+    <p>
+      It turned out to be pretty difficult to map pixels exactly when following
+      the mapping of the given dataset!
+    </p>
+
+    <h2>Caricatures: Extrapolating from the Mean</h2>
+    <p>
+      To create a caricature of my face, I extrapolated from the population mean
+      by amplifying the difference between my face shape and the average face
+      shape. This accentuates the features that are unique to my face.
+    </p>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      "
+    >
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/carac_face_alpha_1.3.jpg"
+          alt="Caricature with Alpha 1.3"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Caricature with Alpha 1.3</p>
+      </div>
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/carac_face_alpha_1.5.jpg"
+          alt="Caricature with Alpha 1.5"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Caricature with Alpha 1.5</p>
+      </div>
+      <div style="text-align: center; margin: 10px">
+        <img
+          src="./images/carac_face_alpha_1.95.jpg"
+          alt="Caricature with Alpha 1.95"
+          style="max-width: 25vw; height: auto"
+        />
+        <p>Caricature with Alpha 1.95</p>
+      </div>
+    </div>
+  </body>
+</html>
