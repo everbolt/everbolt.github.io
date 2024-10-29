@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Project 4 - Image Warping and Mosaicing</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+      h1,
+      h2,
+      h3 {
+        text-align: center;
+      }
+      .image-row {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      .image-row div {
+        text-align: center;
+        margin: 10px;
+      }
+      .image-row img {
+        max-width: 100%;
+        height: auto;
+      }
+      p {
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CS 180: Project 4 - Image Warping and Mosaicing</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+
+    <h2>Introduction</h2>
+    <p>
+      In this project, I created an image mosaic by using projective warping,
+      resampling, and composition via human-labeled reference points on the
+      individual image components. This allowed me to rectify a component of a
+      single image, such as a section worksheet. It also allowed me to create a
+      mosaic of multiple images, such as a panorama.
+    </p>
+
+    <h2>Image Rectification</h2>
+    <p>
+      I began by selecting the reference points in the image. I used the
+      provided custom tool to select the corners of the worksheet in the
+      picture. I knew that the worksheet was a piece of standard paper with
+      dimensions 8.8inx11in. This allowed me to define the corresponding points
+      for the warping to enforce those proportions.
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/worksheet_reference_pts.png" />
+        <p>Keypoints on the original image</p>
+      </div>
+      <div>
+        <img src="./images/worksheet_warped_raw.png" />
+        <p>Warped Worksheet</p>
+      </div>
+      <div>
+        <img src="./images/worksheet_result.png" />
+        <p>Resulting Worksheet</p>
+      </div>
+    </div>
+
+    <h2>Shooting the Pictures</h2>
+    <p>
+      To create the image mosaics, I captured a series of photographs with
+      significant overlap between each adjacent pair. I ensured that the images
+      were taken from the same position, rotating the camera to capture
+      different parts of the scene. This approach maintains a consistent center
+      of projection, which is crucial for accurate homography estimation.
+    </p>
+    <p>
+      I just used my iPhone to take the pictures. After some testing, I realized
+      that taking pictures of scenes that had consistent depths helped create
+      good mosaics with fewer artifacts. Excluding people and other moving
+      objects was also important
+    </p>
+
+    <h2>Recovering Homographies</h2>
+    <p>
+      The next step was to compute the homography matrices that relate each pair
+      of images. I implemented a function
+      <code>computeH(im1_pts, im2_pts)</code> that calculates the homography
+      matrix <em>H</em> using a set of corresponding points between two images.
+    </p>
+    <p>
+      To obtain accurate correspondences, I used the provided custom tool that
+      allows me to select matching points in overlapping regions of the images.
+      With more than four point correspondences, I set up an overdetermined
+      linear system and solved for <em>H</em> using least-squares minimization.
+      This method reduces the impact of noise and inaccuracies in point
+      selection.
+    </p>
+    <div class="image-row">
+      <div>
+        <img src="./images/skyline12_pts.png" />
+        <p>Points for Skyline 1 and 2</p>
+      </div>
+      <div>
+        <img src="./images/skyline23_pts.png" />
+        <p>Points for Skyline 2 and 3</p>
+      </div>
+    </div>
+
+    <h2>Warping the Images</h2>
+    <p>
+      With the homography matrices computed, I proceeded to warp the images to
+      align them with a reference image. I implemented a function
+      <code>warpImage(im, H)</code> that applies the homography to an image. I
+      used inverse warping to map coordinates in the destination image back to
+      the source image, ensuring that every pixel in the output image receives a
+      value.
+    </p>
+    <p>
+      To handle aliasing during resampling, I used bilinear interpolation. I
+      also calculated the bounding box of the warped image by transforming the
+      corner points of the original image, which allowed me to allocate the
+      appropriate size for the output image.
+    </p>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/skyline12.png" />
+        <p>Source Images</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/skyline23.png" />
+        <p>Final Mosaic</p>
+      </div>
+    </div>
+
+    <h2>Combining into a 3-image Mosaic</h2>
+    <p>
+      After warping the images, I blended them together to create a seamless
+      mosaic. I chose one image as the reference and warped the other images
+      into its coordinate system. To avoid sharp transitions and edge artifacts,
+      I used weighted averaging with an alpha mask for each image.
+    </p>
+    <p>
+      The alpha mask for each image was designed to have higher values at the
+      center and gradually decrease towards the edges. This approach ensures a
+      smooth blending in the overlapping regions.
+    </p>
+    <div class="image-row">
+      <div>
+        <img src="./images/skyline123.png" />
+      </div>
+    </div>
+
+    <h2>Here are two more mosaics!</h2>
+    <div class="image-row">
+      <div>
+        <img src="./images/coffee_123.png" />
+      </div>
+    </div>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/car_34.png" />
+      </div>
+    </div>
+
+    <h1>CS 180: Project 4b - Feature Matching!</h1>
+    <p>
+      In this part of the project, we focus on automatically detecting features
+      in images and identifying shared features between two images. With these
+      tools, we are able to automatically stitch images together without having
+      to manually label correspondance points. This saves a bunch of effort and
+      produces even more accurate results!
+    </p>
+
+    <h2>Detecting Corner Features</h2>
+    <p>
+      By modifying the provided Harris corners code, we are able to implement
+      adaptive non-maximal suppression as described by the paper. This allows us
+      to select a subset of the Harris corners that are well-distributed across
+      the image and have a high corner response.
+    </p>
+    <h3>Here are the results for Skyline 1 and 2</h3>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/anms_skyline_1.png" />
+        <p>Skyline 1 ANMS</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/anms_skyline_2.png" />
+        <p>Skyline 2 ANMS</p>
+      </div>
+    </div>
+
+    <h2>Feature Extraction</h2>
+    <p>
+      Ok, this is neat. We have a bunch of seemingly "important" points within
+      each image, but how do we compare and associate these points across
+      images? <br />
+      <br />
+      To do this, we extract so-called "features" at each of these points! These
+      are 40-pixel patches centered at each corner point. We can think of these
+      as fingerprints that are intended to uniquely describe the local image
+      content around each corner point. While it would be great to use all of
+      the pixels in the patch, this would be computationally expensive. Instead,
+      we transform this window into an 8 by 8 pixel feature descriptor. We will
+      use this descriptor to compare features across images.
+    </p>
+    <h3>
+      Here are a few examples of the features extracted from Skyline 1 and 2
+    </h3>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/features_1.png" />
+        <p>Skyline 1 Features</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/features_2.png" />
+        <p>Skyline 2 Features</p>
+      </div>
+    </div>
+
+    <h2>Feature Matching</h2>
+    <p>
+      Ok neat! Now we have some unique features within each image. Let's figure
+      out how to associate shared features across these two images! For each
+      feature in the first image, we can compare it to all features in the
+      second image and find the best match. This provides us with a set of
+      corresponding features between the two images. We can take the strongest
+      matches and use them to estimate the homography between the images.
+    </p>
+    <h3>Here are the strongest matches for Skyline 1 and 2</h3>
+    <div class="image-row">
+      <div>
+        <img src="./images/feature_matches.png" />
+        <p>Skyline 1 and 2 Matches</p>
+      </div>
+    </div>
+
+    <h2>Using RANSAC</h2>
+    <p>
+      Ok, now we have a bunch of correspondance points, how can we use these to
+      compute a homography, possibly more accurately than how we had done so
+      before? RANSAC is a robust method for estimating the homography between
+      two images given a set of correspondance points. In this implementation,
+      we repeatedly select 4 random correspondance points that we found above
+      and compute the homography between them. We then evaluate the homography
+      on all correspondance points and keep track of the number of inliers. The
+      homography with the most inliers is then selected as the best homography.
+      <br />
+      <br />By doing so, we are able to automatically find the best homography
+      and stitch the images together using the code from the first part of the
+      project.
+    </p>
+    <h3>Skyline 1 and 2</h3>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/skyline12.png" />
+        <p>Manual Stitching</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/auto_skyline_1_2.png" />
+        <p>RANSAC Stitching</p>
+      </div>
+    </div>
+    <h3>Coffee 1 and 2</h3>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/coffee_1_2.png" />
+        <p>Manual Stitching</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/auto_coffee_1_2.png" />
+        <p>RANSAC Stitching</p>
+      </div>
+    </div>
+    <h3>Car 3 and 4</h3>
+    <div class="image-row">
+      <div style="width: 40%">
+        <img src="./images/car_34.png" />
+        <p>Manual Stitching</p>
+      </div>
+      <div style="width: 40%">
+        <img src="./images/auto_car_3_4.png" />
+        <p>RANSAC Stitching</p>
+      </div>
+    </div>
+    <br /><br />
+    <h3>Observations</h3>
+    <p>
+      This is pretty neat! It took me ~15 minutes to pick out good
+      correspondance points when manually stitching these images together. This
+      implementation is able to automatically stitch the images together in a
+      fraction of the time and with even more accuracy. It's worth noting that
+      the results aren't drastically different, but with RANSAC, some of the
+      warped images are slightly different. This probably means that the points
+      that I picked manually were reasonably effective when stitching the images
+      together.
+    </p>
+    <h3>RANSAC is pretty sick</h3>
+    <p>
+      I really enjoyed learning about how RANSAC works. I think many algorithms
+      and techniques that we are taught aim to find the theoretical optimal
+      solution for the problem at hand. In the real world, there are many
+      problems that can't be solved optimally, and thus approximation algorithms
+      become incredibly powerful. RANSAC is a great example of this. It's not
+      guaranteed that RANSAC will find the best homography, but it provides some
+      statistical certainty that the homography found will be reasonably good.
+    </p>
+  </body>
+</html>
