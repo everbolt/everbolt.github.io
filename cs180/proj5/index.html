@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Project 5 - Fun With Diffusion Models!</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+      h1,
+      h2,
+      h3 {
+        text-align: center;
+      }
+      .image-row {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      .image-row div {
+        text-align: center;
+        margin: 10px;
+      }
+      .image-row img {
+        max-width: 100%;
+        height: auto;
+      }
+      p {
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CS 180: Project 5 - Fun With Diffusion Models!</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+
+    <h2>Introduction</h2>
+    <p>
+      In this project, I explored using denoising models to generate images
+      based on text descriptions and initial images. I then built a denoising
+      model specifically for the MNIST dataset.
+    </p>
+
+    <h2>Implementing the Forward Process</h2>
+    <p>
+      I began by implementing a function that could add a defined amount of
+      noise to a given image. Here are a few examples of increasingly noisy
+      images of the Campanile.
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/campanile.png" />
+        <p>Original (t=0)</p>
+      </div>
+      <div>
+        <img src="./images/campanile_250.png" />
+        <p>t=250</p>
+      </div>
+      <div>
+        <img src="./images/campanile_500.png" />
+        <p>t=500</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <p>t=750</p>
+      </div>
+    </div>
+
+    <p>
+      Here were my attempts to denoise these images using a Gaussian filter.
+      It's pretty rough!
+    </p>
+    <div class="image-row">
+      <div>
+        <img src="./images/campanile_250.png" />
+        <img src="./images/campanile_denoise_250.png" />
+        <p>Denoised t=250 (kernel=5, sigma=4)</p>
+      </div>
+      <div>
+        <img src="./images/campanile_500.png" />
+        <img src="./images/campanile_denoise_500.png" />
+        <p>Denoised t=500 (kernel=5, sigma=5)</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <img src="./images/campanile_denoise_750.png" />
+        <p>Denoised t=750 (kernel=5, sigma=3)</p>
+      </div>
+    </div>
+
+    <p>
+      Now using a denoising model, here are some results with one-step
+      denoising!
+    </p>
+    <div class="image-row">
+      <div>
+        <img src="./images/campanile_250.png" />
+        <img src="./images/campanile_onestep_250.png" />
+        <p>Onestep Denoised t=250</p>
+      </div>
+      <div>
+        <img src="./images/campanile_500.png" />
+        <img src="./images/campanile_onestep_500.png" />
+        <p>Onestep Denoised t=500</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <img src="./images/campanile_onestep_750.png" />
+        <p>Onestep Denoised t=750</p>
+      </div>
+    </div>
+
+    <p>Now let's try iterative denoising!</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/campanile.png" />
+        <p>Original</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <img src="./images/campanile_clean_multistep.png" />
+        <p>Iterative Denoised</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <img src="./images/campanile_onestep_clean.png" />
+        <p>Onestep Denoised</p>
+      </div>
+      <div>
+        <img src="./images/campanile_750.png" />
+        <img src="./images/campanile_denoise_750.png" />
+        <p>Gaussian Filter</p>
+      </div>
+    </div>
+
+    <p>
+      If we try to denoise starting with an image of pure noise, we get images
+      like this!
+    </p>
+    <div class="image-row">
+      <div>
+        <img src="./images/random_1.png" />
+      </div>
+      <div>
+        <img src="./images/random_2.png" />
+      </div>
+      <div>
+        <img src="./images/random_3.png" />
+      </div>
+      <div>
+        <img src="./images/random_4.png" />
+      </div>
+      <div>
+        <img src="./images/random_5.png" />
+      </div>
+    </div>
+
+    <p>Image to image translation!</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/camp_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/camp_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/camp_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/camp_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/camp_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/camp_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/dog_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/dog_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/dog_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/dog_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/dog_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/dog_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+
+    <p>Hand-drawn and Web Images</p>
+    <p>Pixeldog</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/pixeldog_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/pixeldog_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/pixeldog_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/pixeldog_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/pixeldog_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/pixeldog_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+    <p>Stickfigure</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/stickfigure_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/stickfigure_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/stickfigure_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/stickfigure_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/stickfigure_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/stickfigure_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+    <p>Normaldog</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/dog_a_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/dog_a_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/dog_a_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/dog_a_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/dog_a_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/dog_a_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+
+    <h2>Inpainting</h2>
+    <p>Campanile</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/inpaint_campanile_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/inpaint_campanile_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/inpaint_campanile_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/inpaint_campanile_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/inpaint_campanile_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/inpaint_campanile_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+    <p>Dog</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/dog_inpaint_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/dog_inpaint_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/dog_inpaint_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/dog_inpaint_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/dog_inpaint_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/dog_inpaint_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+    <p>Campanile Rocket</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/campanile_inpaint_rocket_1.png" />
+        <p>i_start=1</p>
+      </div>
+      <div>
+        <img src="./images/campanile_inpaint_rocket_3.png" />
+        <p>i_start=3</p>
+      </div>
+      <div>
+        <img src="./images/campanile_inpaint_rocket_5.png" />
+        <p>i_start=5</p>
+      </div>
+      <div>
+        <img src="./images/campanile_inpaint_rocket_7.png" />
+        <p>i_start=7</p>
+      </div>
+      <div>
+        <img src="./images/campanile_inpaint_rocket_10.png" />
+        <p>i_start=10</p>
+      </div>
+      <div>
+        <img src="./images/campanile_inpaint_rocket_20.png" />
+        <p>i_start=20</p>
+      </div>
+    </div>
+    <p>Flip Illusions</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/old_man_flip_v2.png" />
+        <img
+          style="transform: rotate(180deg)"
+          src="./images/old_man_flip_v2.png"
+        />
+        <p>Example 1 of campfire old man</p>
+      </div>
+      <div>
+        <img src="./images/old_man_flip_v3.png" />
+        <img
+          style="transform: rotate(180deg)"
+          src="./images/old_man_flip_v3.png"
+        />
+        <p>Example 2 of campfire old man</p>
+      </div>
+
+      <div>
+        <img src="./images/flip_snow_waterfall.png" />
+        <img
+          style="transform: rotate(180deg)"
+          src="./images/flip_snow_waterfall.png"
+        />
+        <p>Snow village and a waterfall</p>
+      </div>
+    </div>
+    <p>Low/High Pass Filter Illusions</p>
+    <div class="image-row">
+      <div>
+        <img src="./images/skull_waterfall.png" />
+        <p>Skull waterfall</p>
+      </div>
+      <div>
+        <img src="./images/blur_rocketship_pencil.png" />
+        <p>Rocketship Pencil</p>
+      </div>
+      <div>
+        <img src="./images/blur_hipster_barrista_v1.png" />
+        <p>Hipster Barrista</p>
+      </div>
+    </div>
+
+    <h1>Part B of the project</h1>
+
+    <h2>Examples of noise levels</h2>
+    <div>
+      <img src="./images/noise_0.png" />
+      <p>Number 0</p>
+    </div>
+    <div>
+      <img src="./images/noise_1.png" />
+      <p>Number 1</p>
+    </div>
+    <div>
+      <img src="./images/noise_4.png" />
+      <p>Number 4</p>
+    </div>
+    <div>
+      <img src="./images/noise_5.png" />
+      <p>Number 5</p>
+    </div>
+    <img src="./images/training_loss.png" />
+    <img style="max-width: 100%" src="./images/denoising_epoch_1.png" />
+    <img style="max-width: 100%" src="./images/denoising_epoch_5.png" />
+    <img src="./images/different_denoising_for_diff_sigma.png" />
+  </body>
+</html>
