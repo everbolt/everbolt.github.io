@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CS 180: Lightfield Camera</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: auto;
+      }
+
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin-bottom: 1em;
+      }
+
+      h1,
+      h2 {
+        text-align: center;
+      }
+
+      .image-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 20px;
+        margin-bottom: 2em;
+      }
+
+      .image-row > div {
+        text-align: center;
+        flex: 1;
+        min-width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CS 180: Lightfield Camera</h1>
+    <p>Tobias Worledge, Fall 2024</p>
+
+    <h2>Overview</h2>
+    <p>
+      In this project, I worked with a set of light field images. By shifting
+      and averaging multiple viewpoints acquired on a plane perpendicular to the
+      optical axis, I could control the plane of focus after capture. Changing
+      the shift parameters (alpha) corresponds to refocusing at different depths
+      in the scene. Additionally, by varying the number of cameras averaged, I
+      simulated changing the aperture size: using more cameras approximates a
+      larger aperture, resulting in shallower depth of field.
+    </p>
+
+    <h2>Depth Refocusing</h2>
+    <div class="image-row">
+      <div>
+        <img
+          src="./images/refocused/refocus_alpha_-0.50.png"
+          alt="Alpha -0.50"
+        />
+        <p>Alpha -0.50</p>
+      </div>
+      <div>
+        <img
+          src="./images/refocused/refocus_alpha_-0.40.png"
+          alt="Alpha -0.40"
+        />
+        <p>Alpha -0.40</p>
+      </div>
+      <div>
+        <img
+          src="./images/refocused/refocus_alpha_-0.30.png"
+          alt="Alpha -0.30"
+        />
+        <p>Alpha -0.30</p>
+      </div>
+      <div>
+        <img
+          src="./images/refocused/refocus_alpha_-0.20.png"
+          alt="Alpha -0.20"
+        />
+        <p>Alpha -0.20</p>
+      </div>
+      <div>
+        <img
+          src="./images/refocused/refocus_alpha_-0.10.png"
+          alt="Alpha -0.10"
+        />
+        <p>Alpha -0.10</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.00.png" alt="Alpha 0.00" />
+        <p>Alpha 0.00</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.10.png" alt="Alpha 0.10" />
+        <p>Alpha 0.10</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.20.png" alt="Alpha 0.20" />
+        <p>Alpha 0.20</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.30.png" alt="Alpha 0.30" />
+        <p>Alpha 0.30</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.40.png" alt="Alpha 0.40" />
+        <p>Alpha 0.40</p>
+      </div>
+      <div>
+        <img src="./images/refocused/refocus_alpha_0.50.png" alt="Alpha 0.50" />
+        <p>Alpha 0.50</p>
+      </div>
+    </div>
+
+    <p>
+      Since we can generate a bunch of these images, we can make a gif that
+      slowly changes the focus of the given image! This shows the focus sweeping
+      from one depth plane to another as alpha changes. Note how different parts
+      of the scene come into sharp focus depending on the chosen alpha value.
+    </p>
+    <div style="text-align: center; margin-bottom: 2rem">
+      <img
+        src="./images/refocused/focus_sweep.gif"
+        alt="Focus Sweep GIF"
+        id="focusSweepGif"
+      />
+      <br />
+      <button
+        onclick="document.getElementById('focusSweepGif').src='./images/refocused/focus_sweep.gif'"
+      >
+        Replay
+      </button>
+    </div>
+
+    <p>
+      I generated a series of images by varying alpha. Each image is produced by
+      shifting all the rectified images according to their camera positions and
+      the chosen alpha, and then averaging. As alpha increases or decreases,
+      different depth planes become sharp.
+    </p>
+
+    <h2>Simulating Different Apertures</h2>
+    <p>
+      By fixing a particular focus plane (choosing a single alpha that brings a
+      certain region into best focus) and then varying how many cameras I
+      average, I can simulate different aperture sizes. Fewer cameras correspond
+      to a smaller synthetic aperture (and thus deeper depth-of-field), while
+      using more cameras creates a larger aperture (and shallower
+      depth-of-field).
+    </p>
+
+    <p>
+      Below are some examples. All these images are focused at the same plane,
+      but differ in how many camera viewpoints are averaged:
+    </p>
+
+    <div class="image-row">
+      <div>
+        <img src="./images/aperture/aperture_1.png" alt="1 Camera Aperture" />
+        <p>1 Camera (Small Aperture)</p>
+      </div>
+      <div>
+        <img src="./images/aperture/aperture_9.png" alt="9 Cameras Aperture" />
+        <p>9 Cameras</p>
+      </div>
+      <div>
+        <img
+          src="./images/aperture/aperture_25.png"
+          alt="25 Cameras Aperture"
+        />
+        <p>25 Cameras</p>
+      </div>
+    </div>
+
+    <div class="image-row">
+      <div>
+        <img
+          src="./images/aperture/aperture_81.png"
+          alt="81 Cameras Aperture"
+        />
+        <p>81 Cameras</p>
+      </div>
+      <div>
+        <img
+          src="./images/aperture/aperture_121.png"
+          alt="121 Cameras Aperture"
+        />
+        <p>121 Cameras</p>
+      </div>
+      <div>
+        <img
+          src="./images/aperture/aperture_289.png"
+          alt="289 Cameras Aperture"
+        />
+        <p>289 Cameras (Large Aperture)</p>
+      </div>
+    </div>
+
+    <p>
+      As the number of cameras (aperture size) increases, you can see the
+      out-of-focus regions becoming blurrier, while the focused region remains
+      sharp. This is analogous to using a lens with a larger physical aperture,
+      which reduces the depth-of-field.
+    </p>
+
+    <h2>Conclusion</h2>
+    <p>
+      This project demonstrates the power of synthetic aperture imaging and
+      post-capture refocusing using light field data. By computationally
+      combining images from multiple viewpoints, we can simulate changing focus
+      and aperture size after the images have been captured, achieving effects
+      that would normally require specialized optics.
+    </p>
+  </body>
+</html>
